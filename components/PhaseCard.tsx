@@ -1,6 +1,6 @@
 'use client';
 
-import { memo, useEffect, useMemo, useState } from 'react';
+import { memo, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, Folder } from 'lucide-react';
 import type { Phase, StatusFilter } from '@/lib/types';
@@ -21,15 +21,14 @@ function PhaseCardBase({ phase, defaultExpanded = false, search, filter }: Props
   const statuses = useRoadmapStore((s) => s.statuses);
   const summary = useMemo(() => summarizePhase(statuses, phase), [statuses, phase]);
 
-  // Auto-expand when search has matches in this phase
-  useEffect(() => {
-    if (!search.trim()) return;
+  const autoExpanded = useMemo(() => {
+    if (!search.trim()) return false;
     const q = search.trim().toLowerCase();
-    const hit = phase.topics.some(
+    return phase.topics.some(
       (t) => t.title.toLowerCase().includes(q) || t.subtopics.some((s) => s.title.toLowerCase().includes(q))
     );
-    if (hit) setExpanded(true);
   }, [search, phase]);
+  const isExpanded = expanded || autoExpanded;
 
   return (
     <motion.div layout className="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/60 transition hover:border-zinc-700">
@@ -56,12 +55,12 @@ function PhaseCardBase({ phase, defaultExpanded = false, search, filter }: Props
             <span className="text-[11px] font-medium text-brand-400">{summary.percent}%</span>
           </div>
         </div>
-        <motion.span animate={{ rotate: expanded ? 180 : 0 }} transition={{ duration: 0.2 }} className="text-zinc-500">
+        <motion.span animate={{ rotate: isExpanded ? 180 : 0 }} transition={{ duration: 0.2 }} className="text-zinc-500">
           <ChevronDown className="h-5 w-5" />
         </motion.span>
       </button>
       <AnimatePresence initial={false}>
-        {expanded && (
+        {isExpanded && (
           <motion.div
             key="content"
             initial={{ height: 0, opacity: 0 }}

@@ -11,13 +11,14 @@ import { RightPanel } from '@/components/RightPanel';
 import { ResetModal } from '@/components/ResetModal';
 import { AuthModal } from '@/components/AuthModal';
 import { useRoadmapStore } from '@/lib/store';
+import { useCloudProgressSync } from '@/lib/use-cloud-progress-sync';
 import { currentWeekFromStart } from '@/lib/utils';
 import { Settings as SettingsIcon, Rocket, Sparkles, Lock } from 'lucide-react';
 
 export default function Page() {
-  const [mounted, setMounted] = useState(false);
   const [resetOpen, setResetOpen] = useState(false);
   const { isSignedIn, isLoaded } = useUser();
+  const cloudSyncStatus = useCloudProgressSync();
   const startDate = useRoadmapStore((s) => s.startDate);
   const setSelectedWeek = useRoadmapStore((s) => s.setSelectedWeek);
   const hydrated = useRoadmapStore((s) => s.hydrated);
@@ -27,20 +28,16 @@ export default function Page() {
   const closeAuthModal = useRoadmapStore((s) => s.closeAuthModal);
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
     if (hydrated) {
       const wk = currentWeekFromStart(startDate);
       setSelectedWeek(wk);
     }
   }, [hydrated, startDate, setSelectedWeek]);
 
-  if (!mounted || !isLoaded) {
+  if (!hydrated || !isLoaded || (isSignedIn && (cloudSyncStatus === 'idle' || cloudSyncStatus === 'loading'))) {
     return (
       <div className="flex h-screen items-center justify-center bg-zinc-950 text-zinc-400">
-        <div className="animate-pulse">Loading…</div>
+        <div className="animate-pulse">Loading progress...</div>
       </div>
     );
   }
@@ -179,6 +176,7 @@ function PublicCallout({ onSignUp }: { onSignUp: () => void }) {
 function SettingsSection({ onReset }: { onReset: () => void }) {
   const startDate = useRoadmapStore((s) => s.startDate);
   const setStartDate = useRoadmapStore((s) => s.setStartDate);
+  const cloudSyncStatus = useRoadmapStore((s) => s.cloudSyncStatus);
   return (
     <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-5">
       <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-zinc-100">
@@ -195,6 +193,15 @@ function SettingsSection({ onReset }: { onReset: () => void }) {
             className="w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-brand-500"
           />
           <span className="mt-1 block text-xs text-zinc-500">Week 1 begins on this date.</span>
+          <span className="mt-2 block text-xs text-zinc-500">
+            {cloudSyncStatus === 'synced'
+              ? 'Progress is synced to your account.'
+              : cloudSyncStatus === 'syncing'
+                ? 'Saving progress to your account...'
+                : cloudSyncStatus === 'offline'
+                  ? 'Cloud sync is unavailable. Changes remain saved in this browser.'
+                  : 'Connecting cloud sync...'}
+          </span>
         </label>
         <div className="flex items-end">
           <button
