@@ -1,0 +1,52 @@
+/** @type {import('next').NextConfig} */
+
+// Security headers applied to every response. These are defense-in-depth:
+// Vercel + browsers already enforce HSTS; we add the rest manually.
+//
+// Notes on what's intentionally omitted:
+// - Content-Security-Policy (CSP): not set globally because Clerk loads its
+//   JS from clerk.accounts.dev + variable dev/preview hostnames. Adding a
+//   strict CSP without explicitly allowlisting Clerk would break sign-in.
+//   If you want CSP later, follow Clerk's official guide for Next.js.
+// - X-XSS-Protection: deprecated in modern browsers — Chrome removed it.
+
+const securityHeaders = [
+  // Prevent clickjacking — your pages cannot be embedded in an iframe on
+  // another site.
+  { key: 'X-Frame-Options', value: 'DENY' },
+
+  // Stop browsers from MIME-sniffing a response away from its declared type.
+  { key: 'X-Content-Type-Options', value: 'nosniff' },
+
+  // Don't leak full URLs in the Referer header when users click external links.
+  { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+
+  // Deny powerful browser features we don't use. Add to allowlist if you ever
+  // add camera, mic, geolocation, etc.
+  {
+    key: 'Permissions-Policy',
+    value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()',
+  },
+
+  // Force HTTPS for ~2 years + subdomains + preload-eligible. Vercel already
+  // sends this, but defining it here makes the policy explicit + version-controlled.
+  {
+    key: 'Strict-Transport-Security',
+    value: 'max-age=63072000; includeSubDomains; preload',
+  },
+];
+
+const nextConfig = {
+  reactStrictMode: true,
+  poweredByHeader: false, // remove the `X-Powered-By: Next.js` leakage
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: securityHeaders,
+      },
+    ];
+  },
+};
+
+module.exports = nextConfig;
