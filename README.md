@@ -15,8 +15,8 @@ I'm a second-year CSE student following a 40-week, day-by-day plan to become a j
 1. Bakes the 40-week roadmap directly into the code as typed data — no setup required.
 2. Tracks per-subtopic status with a 3-state cycling checkbox (`not-started → in-progress → completed`).
 3. Computes streak, weekly progress, and per-phase analytics in real time.
-4. Stores all progress in the browser — no backend database to host or pay for.
-5. Has authentication so each user's progress stays separate, but is otherwise fully public-readable.
+4. Syncs progress across devices with account-scoped Upstash Redis storage and keeps a browser fallback.
+5. Uses authentication so each user's progress stays separate, but is otherwise fully public-readable.
 
 If you want a personal learning dashboard you can fork and adapt to *your* roadmap (DSA, design, whatever), this is a clean starting point.
 
@@ -30,11 +30,11 @@ If you want a personal learning dashboard you can fork and adapt to *your* roadm
 - **Weekly progress panel** with circular ring (Recharts) and per-week subtopic list.
 - **Analytics** — line chart (daily completions, last 30 days) + bar chart (per-phase completion %).
 - **Search + status filter + view toggle** (Roadmap / Week View).
-- **Public landing + auth-gated tracking** — anyone can browse the roadmap; signing in unlocks progress tracking.
+- **Public landing + auth-gated tracking** — anyone can browse the roadmap; signing in unlocks cross-device progress tracking.
 - **Sidebar with ChatGPT-style profile pill** — collapses to a single avatar, expands to name + dropdown.
 - **Export / Reset / Quick Actions** — download progress as JSON, mark whole weeks complete, reset everything with confirmation.
 - **Polished SEO** — auto-generated Open Graph image, JSON-LD schema, sitemap, robots.txt, rich metadata.
-- **Hardened headers** — `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, `Strict-Transport-Security`.
+- **Hardened headers** — `Content-Security-Policy`, `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, `Strict-Transport-Security`.
 
 ---
 
@@ -42,18 +42,18 @@ If you want a personal learning dashboard you can fork and adapt to *your* roadm
 
 | Layer | Choice | Why |
 |---|---|---|
-| Framework | Next.js 14 (App Router) | RSC, file-based routing, edge-friendly |
+| Framework | Next.js 16 (App Router) | RSC, file-based routing, edge-friendly |
 | Language | TypeScript (strict, no `any`) | Catch bugs at compile time |
 | Styling | Tailwind CSS | Utility-first, no custom CSS |
 | Animation | Framer Motion | Spring physics, AnimatePresence |
 | State | Zustand + `persist` | Tiny, fast, no Context drilling |
-| Persistence | Browser `localStorage` | No backend; each user owns their data |
+| Persistence | Upstash Redis + browser `localStorage` | Account-scoped cloud sync with an offline fallback |
 | Charts | Recharts | Dark-theme friendly, accessible |
 | Icons | lucide-react | SVG, themable, no emoji |
-| Auth | Clerk | Email/password + signup/logout, no DB |
+| Auth | Clerk | Email/password + signup/logout |
 | Hosting | Vercel (Hobby tier) | Free, edge-deployed |
 
-Everything is free-tier — Vercel Hobby + Clerk free (10k MAU). No paid APIs.
+Everything is free-tier — Vercel Hobby + Clerk free + Upstash Redis free tier.
 
 ---
 
@@ -61,8 +61,9 @@ Everything is free-tier — Vercel Hobby + Clerk free (10k MAU). No paid APIs.
 
 ### Prerequisites
 
-- Node.js 18+ or 20 LTS
+- Node.js 20.9+
 - A free [Clerk](https://clerk.com) account (takes 1 minute)
+- A free [Upstash Redis](https://upstash.com/) database
 
 ### Setup
 
@@ -78,11 +79,13 @@ Copy the env template and fill it with your own Clerk keys:
 cp .env.example .env.local
 ```
 
-Edit `.env.local` and replace the placeholder values with your real keys from [https://dashboard.clerk.com](https://dashboard.clerk.com) → your app → API Keys.
+Edit `.env.local` and replace the placeholder values with your real keys from Clerk and Upstash.
 
 ```env
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
 CLERK_SECRET_KEY=sk_test_...
+UPSTASH_REDIS_REST_URL=https://...
+UPSTASH_REDIS_REST_TOKEN=...
 ```
 
 Run locally:
@@ -101,7 +104,7 @@ vercel login
 vercel
 ```
 
-Add the two Clerk env vars in the Vercel dashboard (Settings → Environments → Production & Preview), then `vercel --prod`.
+Install Upstash from the Vercel Marketplace so its Redis REST environment variables are injected into the project. Add the Clerk env vars in the Vercel dashboard (Settings → Environments → Production & Preview), then `vercel --prod`.
 
 ---
 
@@ -145,7 +148,7 @@ lib/
   store.ts                Zustand store + persist middleware
   selectors.ts            Pure summarizers
   utils.ts                cn(), date helpers, downloadJson()
-middleware.ts             Clerk middleware (pass-through)
+proxy.ts                  Clerk proxy (pass-through)
 next.config.js            Next.js config + security headers
 tailwind.config.ts        Brand colors (orange-500), Inter font
 tsconfig.json             Strict mode, paths: "@/*"
@@ -179,7 +182,7 @@ Keep the `id` strings stable across edits — they're the keys in `localStorage`
 
 ## Data + privacy
 
-Per-user progress is stored entirely in **browser `localStorage`** under the key `ai-roadmap-tracker-v1`. No backend database. Each user's progress stays on their device.
+Per-user progress is stored in **Upstash Redis** under the authenticated Clerk user ID and synced across devices. A browser `localStorage` copy under the key `ai-roadmap-tracker-v1` keeps the dashboard usable if cloud storage is temporarily unavailable.
 
 Authentication (email + password) is handled by [Clerk](https://clerk.com); we never see or store your password.
 
