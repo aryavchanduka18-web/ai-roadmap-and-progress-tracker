@@ -139,7 +139,7 @@ export function DashboardHero() {
                   ) : null}
                   {focus.resources.length > 0 ? (
                     <span>
-                      {focus.resources.length} resource{focus.resources.length === 1 ? ‘’ : ‘s’}
+                      {focus.resources.length} resource{focus.resources.length === 1 ? '' : 's'}
                     </span>
                   ) : null}
                 </div>
