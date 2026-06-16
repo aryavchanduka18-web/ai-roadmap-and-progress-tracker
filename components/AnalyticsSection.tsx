@@ -84,7 +84,7 @@ export function AnalyticsSection() {
               <Tooltip
                 contentStyle={{ backgroundColor: '#18181b', border: '1px solid #27272a', borderRadius: 8 }}
                 labelStyle={{ color: '#fafafa' }}
-                formatter={(v) => [`${Number(v ?? 0)}%`, 'Complete']}
+                formatter={(v: number) => [`${v}%`, 'Complete']}
               />
               <Bar dataKey="percent" fill="#f97316" radius={[4, 4, 0, 0]} />
             </BarChart>

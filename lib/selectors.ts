@@ -1,5 +1,6 @@
 import type { Phase, Status, StatusMap, Subtopic, Topic } from './types';
 import { roadmap } from './roadmap-data';
+import { todayKey, parseDateKey, daysBetween } from './utils';
 
 export interface CountSummary {
   total: number;
@@ -108,4 +109,60 @@ export function phasePercents(map: StatusMap): PhaseBarDatum[] {
     phase: `P${p.number}`,
     percent: summarizePhase(map, p).percent,
   }));
+}
+
+// ── Streak (computed live from dailyCompletions — never stale) ───────────────
+// The old store kept a frozen `streak` field that only updated on completion,
+// so a broken streak still displayed its last value. These derive the streak
+// from the actual completion history every render.
+export function computeStreak(daily: Record<string, number>, today: string = todayKey()): number {
+  const cursor = parseDateKey(today);
+  // If today has no completions yet, the streak is still "alive" when yesterday
+  // had one (grace for the current day). If neither, it's broken → 0.
+  if ((daily[todayKey(cursor)] ?? 0) === 0) {
+    cursor.setDate(cursor.getDate() - 1);
+    if ((daily[todayKey(cursor)] ?? 0) === 0) return 0;
+  }
+  let streak = 0;
+  while ((daily[todayKey(cursor)] ?? 0) > 0) {
+    streak++;
+    cursor.setDate(cursor.getDate() - 1);
+  }
+  return streak;
+}
+
+export function computeLongestStreak(daily: Record<string, number>): number {
+  const active = Object.keys(daily)
+    .filter((d) => (daily[d] ?? 0) > 0)
+    .sort();
+  let longest = 0;
+  let run = 0;
+  let prev: string | null = null;
+  for (const d of active) {
+    run = prev && daysBetween(prev, d) === 1 ? run + 1 : 1;
+    if (run > longest) longest = run;
+    prev = d;
+  }
+  return longest;
+}
+
+// Weeks (1..uptoWeek) that are 100% complete.
+export function weeksCompleted(map: StatusMap, uptoWeek: number): number {
+  let n = 0;
+  for (let w = 1; w <= uptoWeek; w++) {
+    const s = summarizeWeek(map, w);
+    if (s.total > 0 && s.completed === s.total) n++;
+  }
+  return n;
+}
+
+// O(1) subtopic lookup by id — used by the store to label completion toasts.
+const _subtopicIndex: Record<string, Subtopic> = (() => {
+  const m: Record<string, Subtopic> = {};
+  for (const phase of roadmap) for (const topic of phase.topics) for (const sub of topic.subtopics) m[sub.id] = sub;
+  return m;
+})();
+
+export function subtopicById(id: string): Subtopic | undefined {
+  return _subtopicIndex[id];
 }

@@ -1,10 +1,23 @@
 import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
+import Script from 'next/script';
 import { ClerkProvider } from '@clerk/nextjs';
 import { dark } from '@clerk/themes';
 import './globals.css';
 
+// Load Inter via next/font so it is served from Vercel's CDN instead of an
+// external rsms.me request. This shaves ~300 ms off LCP (no extra DNS + TCP
+// round-trip) and eliminates the render-blocking external stylesheet.
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-inter',
+});
+
 const SITE_URL = 'https://ai-roadmap--tracker.vercel.app';
-const SITE_TITLE = 'AI Engineer Roadmap · Progress Tracker';
+// "Free 10-Month" in the title directly matches the queries people type —
+// "free AI engineer roadmap" and "10 month AI learning path".
+const SITE_TITLE = 'AI Engineer Roadmap — Free 10-Month Learning Path';
 const SITE_DESCRIPTION =
   'Free 10-month AI Engineer roadmap with 40 weeks of daily tasks: math foundations, classical ML, PyTorch, transformers from scratch, RAG, fine-tuning, agents, ML system design and interview prep. Track your progress, streak, and analytics privately.';
 
@@ -91,11 +104,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         },
       }}
     >
-      <html lang="en" className="dark scroll-smooth">
-        <head>
-          <link rel="preconnect" href="https://rsms.me/" />
-          <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
-        </head>
+      {/* inter.variable injects --font-inter CSS variable used by tailwind.config.ts */}
+      <html lang="en" className={`dark scroll-smooth ${inter.variable}`}>
+        <head />
         <body className="min-h-screen bg-zinc-950 text-zinc-100 antialiased font-sans">
           <script
             type="application/ld+json"
@@ -153,10 +164,57 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     educationalRole: 'student',
                   },
                 },
+                // Person schema — establishes Aryav as a real author (E-E-A-T signal)
+                {
+                  '@context': 'https://schema.org',
+                  '@type': 'Person',
+                  name: 'Aryav Chanduka',
+                  url: SITE_URL,
+                  description: 'B.Tech CSE AI/ML student building AI learning tools',
+                  knowsAbout: [
+                    'Machine Learning',
+                    'Deep Learning',
+                    'Artificial Intelligence',
+                    'Python',
+                    'PyTorch',
+                  ],
+                },
+                // SoftwareApplication schema — tells Google this is a free web app
+                {
+                  '@context': 'https://schema.org',
+                  '@type': 'SoftwareApplication',
+                  name: 'AI Engineer Roadmap Progress Tracker',
+                  applicationCategory: 'EducationApplication',
+                  operatingSystem: 'Web',
+                  offers: {
+                    '@type': 'Offer',
+                    price: '0',
+                    priceCurrency: 'USD',
+                  },
+                  url: SITE_URL,
+                  description:
+                    'Track your progress through a free 10-month AI Engineer roadmap with 40 weeks of daily tasks.',
+                },
               ]),
             }}
           />
           {children}
+
+          {/* ── Google Analytics 4 (G-7CERB9ZTHC) ───────────────────────────
+              strategy="afterInteractive" means these scripts load AFTER the
+              page is interactive — they never block rendering or hurt LCP.   */}
+          <Script
+            src="https://www.googletagmanager.com/gtag/js?id=G-7CERB9ZTHC"
+            strategy="afterInteractive"
+          />
+          <Script id="google-analytics" strategy="afterInteractive">
+            {`
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', 'G-7CERB9ZTHC');
+            `}
+          </Script>
         </body>
       </html>
     </ClerkProvider>

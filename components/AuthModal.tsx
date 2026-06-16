@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { SignIn, SignUp } from '@clerk/nextjs';
 import { Rocket, X } from 'lucide-react';
@@ -12,12 +12,11 @@ interface AuthModalProps {
 }
 
 export function AuthModal({ open, onClose, initialMode = 'sign-in' }: AuthModalProps) {
-  const [modeOverride, setModeOverride] = useState<'sign-in' | 'sign-up' | null>(null);
-  const mode = modeOverride ?? initialMode;
-  const close = useCallback(() => {
-    setModeOverride(null);
-    onClose();
-  }, [onClose]);
+  const [mode, setMode] = useState<'sign-in' | 'sign-up'>(initialMode);
+
+  useEffect(() => {
+    setMode(initialMode);
+  }, [initialMode, open]);
 
   // Lock body scroll when modal is open
   useEffect(() => {
@@ -33,11 +32,11 @@ export function AuthModal({ open, onClose, initialMode = 'sign-in' }: AuthModalP
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') close();
+      if (e.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [open, close]);
+  }, [open, onClose]);
 
   return (
     <AnimatePresence>
@@ -47,7 +46,7 @@ export function AuthModal({ open, onClose, initialMode = 'sign-in' }: AuthModalP
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 py-8 backdrop-blur-sm"
-          onClick={close}
+          onClick={onClose}
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.96, y: 10 }}
@@ -58,7 +57,7 @@ export function AuthModal({ open, onClose, initialMode = 'sign-in' }: AuthModalP
             onClick={(e) => e.stopPropagation()}
           >
             <button
-              onClick={close}
+              onClick={onClose}
               aria-label="Close"
               className="absolute -top-2 right-0 inline-flex h-8 w-8 items-center justify-center rounded-full border border-zinc-800 bg-zinc-900 text-zinc-400 transition hover:border-zinc-700 hover:text-zinc-100"
             >
@@ -82,9 +81,9 @@ export function AuthModal({ open, onClose, initialMode = 'sign-in' }: AuthModalP
 
               <div className="flex justify-center">
                 {mode === 'sign-in' ? (
-                  <SignIn routing="hash" signUpUrl="#sign-up" fallbackRedirectUrl="/" />
+                  <SignIn routing="hash" signUpUrl="#sign-up" afterSignInUrl="/" />
                 ) : (
-                  <SignUp routing="hash" signInUrl="#sign-in" fallbackRedirectUrl="/" />
+                  <SignUp routing="hash" signInUrl="#sign-in" afterSignUpUrl="/" />
                 )}
               </div>
 
@@ -93,7 +92,7 @@ export function AuthModal({ open, onClose, initialMode = 'sign-in' }: AuthModalP
                   <>
                     New here?{' '}
                     <button
-                      onClick={() => setModeOverride('sign-up')}
+                      onClick={() => setMode('sign-up')}
                       className="font-medium text-brand-400 underline-offset-4 hover:underline"
                     >
                       Create an account
@@ -103,7 +102,7 @@ export function AuthModal({ open, onClose, initialMode = 'sign-in' }: AuthModalP
                   <>
                     Already have an account?{' '}
                     <button
-                      onClick={() => setModeOverride('sign-in')}
+                      onClick={() => setMode('sign-in')}
                       className="font-medium text-brand-400 underline-offset-4 hover:underline"
                     >
                       Sign in

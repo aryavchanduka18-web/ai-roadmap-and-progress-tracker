@@ -1,14 +1,15 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Flame } from 'lucide-react';
 import { useRoadmapStore } from '@/lib/store';
 import { last30DateKeys, todayKey } from '@/lib/utils';
 import { MOTIVATIONAL_QUOTES } from '@/lib/roadmap-data';
+import { computeStreak } from '@/lib/selectors';
 
 export function StreakWidget({ collapsed }: { collapsed: boolean }) {
-  const streak = useRoadmapStore((s) => s.streak);
   const daily = useRoadmapStore((s) => s.dailyCompletions);
+  // Live streak derived from completion history (fixes the stale frozen value).
+  const streak = computeStreak(daily);
   const last7 = last30DateKeys().slice(-7);
   const today = todayKey();
 
@@ -22,8 +23,8 @@ export function StreakWidget({ collapsed }: { collapsed: boolean }) {
   if (collapsed) {
     return (
       <div className="mx-auto flex h-12 w-12 flex-col items-center justify-center rounded-lg bg-gradient-to-br from-brand-500 to-amber-400 text-zinc-950">
-        <Flame className="h-4 w-4" strokeWidth={2.5} />
-        <span className="text-[10px] font-bold leading-none">{streak}</span>
+        <span className="text-lg font-bold leading-none">{streak}</span>
+        <span className="text-[8px] font-medium uppercase tracking-wider opacity-70">day</span>
       </div>
     );
   }
@@ -41,7 +42,6 @@ export function StreakWidget({ collapsed }: { collapsed: boolean }) {
             <div className="text-3xl font-bold tracking-tight leading-none">{streak}</div>
             <div className="mt-1 text-xs font-medium opacity-80">Day Streak</div>
           </div>
-          <Flame className="h-7 w-7" strokeWidth={2.5} />
         </div>
         <div className="mt-4 flex h-8 items-end gap-1">
           {last7.map((d) => {

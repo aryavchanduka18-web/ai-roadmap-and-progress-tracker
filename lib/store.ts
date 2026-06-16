@@ -3,15 +3,13 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { Status, StatusMap, StatusFilter, ViewMode } from './types';
-import {
-  SCHEMA_VERSION,
-  sanitizeProgressSnapshot,
-  type ProgressSnapshot,
-} from './progress';
+import { allSubtopicIds } from './roadmap-data';
 import { todayKey } from './utils';
+import { toast } from './toast-store';
+import { subtopicById } from './selectors';
 
+const SCHEMA_VERSION = 1;
 const STORAGE_KEY = 'ai-roadmap-tracker-v1';
-type CloudSyncStatus = 'idle' | 'loading' | 'syncing' | 'synced' | 'offline';
 
 interface RoadmapState {
   schemaVersion: number;
@@ -29,8 +27,6 @@ interface RoadmapState {
   hydrated: boolean;
   authModalOpen: boolean;
   authModalMode: 'sign-in' | 'sign-up';
-  syncOwnerId: string | null;
-  cloudSyncStatus: CloudSyncStatus;
 
   cycleStatus: (subtopicId: string) => void;
   setStatus: (subtopicId: string, status: Status) => void;
@@ -45,9 +41,6 @@ interface RoadmapState {
   openAuthModal: (mode?: 'sign-in' | 'sign-up') => void;
   closeAuthModal: () => void;
   _setHydrated: () => void;
-  replaceProgress: (progress: ProgressSnapshot) => void;
-  setSyncOwnerId: (userId: string | null) => void;
-  setCloudSyncStatus: (status: CloudSyncStatus) => void;
 }
 
 const nextStatus = (s: Status): Status =>
@@ -98,14 +91,9 @@ export const useRoadmapStore = create<RoadmapState>()(
       hydrated: false,
       authModalOpen: false,
       authModalMode: 'sign-in',
-      syncOwnerId: null,
-      cloudSyncStatus: 'idle',
 
       openAuthModal: (mode = 'sign-in') => set({ authModalOpen: true, authModalMode: mode }),
       closeAuthModal: () => set({ authModalOpen: false }),
-      replaceProgress: (progress) => set(sanitizeProgressSnapshot(progress)),
-      setSyncOwnerId: (userId) => set({ syncOwnerId: userId }),
-      setCloudSyncStatus: (status) => set({ cloudSyncStatus: status }),
 
       cycleStatus: (id) => {
         const prev: Status = get().statuses[id] ?? 'not-started';
@@ -114,6 +102,9 @@ export const useRoadmapStore = create<RoadmapState>()(
           statuses: { ...state.statuses, [id]: next },
           ...applyCompletion(state, prev, next),
         }));
+        if (next === 'completed' && prev !== 'completed') {
+          toast(subtopicById(id)?.title ?? 'Task completed');
+        }
       },
       setStatus: (id, status) => {
         const prev: Status = get().statuses[id] ?? 'not-started';
@@ -121,8 +112,12 @@ export const useRoadmapStore = create<RoadmapState>()(
           statuses: { ...state.statuses, [id]: status },
           ...applyCompletion(state, prev, status),
         }));
+        if (status === 'completed' && prev !== 'completed') {
+          toast(subtopicById(id)?.title ?? 'Task completed');
+        }
       },
       setMany: (ids, status) => {
+        const prevMap = get().statuses;
         set((state) => {
           const next: StatusMap = { ...state.statuses };
           let extra: Partial<RoadmapState> = {};
@@ -135,6 +130,10 @@ export const useRoadmapStore = create<RoadmapState>()(
           }
           return { statuses: next, ...extra };
         });
+        if (status === 'completed') {
+          const n = ids.filter((id) => (prevMap[id] ?? 'not-started') !== 'completed').length;
+          if (n > 0) toast(`${n} task${n === 1 ? '' : 's'} completed`, n * 50);
+        }
       },
       setSidebarCollapsed: (v) => set({ sidebarCollapsed: v }),
       setSearchQuery: (q) => set({ searchQuery: q }),
@@ -179,7 +178,6 @@ export const useRoadmapStore = create<RoadmapState>()(
         dailyCompletions: s.dailyCompletions,
         startDate: s.startDate,
         selectedWeek: s.selectedWeek,
-        syncOwnerId: s.syncOwnerId,
       }),
       onRehydrateStorage: () => (state, error) => {
         if (error) return; // fallback to defaults silently
@@ -187,14 +185,21 @@ export const useRoadmapStore = create<RoadmapState>()(
       },
       merge: (persisted, current) => {
         const p = (persisted ?? {}) as Partial<RoadmapState>;
+        // Guard against malformed localStorage
+        const safeStatuses: StatusMap = {};
+        if (p.statuses && typeof p.statuses === 'object') {
+          const known = new Set(allSubtopicIds);
+          for (const [k, v] of Object.entries(p.statuses)) {
+            if (known.has(k) && (v === 'not-started' || v === 'in-progress' || v === 'completed')) {
+              safeStatuses[k] = v;
+            }
+          }
+        }
         return {
           ...current,
-          ...sanitizeProgressSnapshot(p),
-          sidebarCollapsed:
-            typeof p.sidebarCollapsed === 'boolean' ? p.sidebarCollapsed : current.sidebarCollapsed,
-          selectedWeek:
-            typeof p.selectedWeek === 'number' ? p.selectedWeek : current.selectedWeek,
-          syncOwnerId: typeof p.syncOwnerId === 'string' ? p.syncOwnerId : null,
+          ...p,
+          statuses: safeStatuses,
+          dailyCompletions: p.dailyCompletions ?? {},
         };
       },
     }

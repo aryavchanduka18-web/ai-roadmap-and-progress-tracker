@@ -82,7 +82,7 @@ export function TopicGroup({ topic, topicIndex, search, filter }: Props) {
         )}
       </div>
       <div className="space-y-0.5 p-2">
-        {filteredSubs.map((sub) => (
+        {filteredSubs.map((sub, i) => (
           <SubtopicRow
             key={sub.id}
             subtopic={sub}

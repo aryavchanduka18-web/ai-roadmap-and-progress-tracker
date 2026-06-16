@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useUser } from '@clerk/nextjs';
 import { Sidebar } from '@/components/Sidebar';
 import { TopHeader } from '@/components/TopHeader';
@@ -10,15 +11,27 @@ import { AnalyticsSection } from '@/components/AnalyticsSection';
 import { RightPanel } from '@/components/RightPanel';
 import { ResetModal } from '@/components/ResetModal';
 import { AuthModal } from '@/components/AuthModal';
+import { DashboardHero } from '@/components/DashboardHero';
+import { Toaster } from '@/components/Toaster';
 import { useRoadmapStore } from '@/lib/store';
-import { useCloudProgressSync } from '@/lib/use-cloud-progress-sync';
 import { currentWeekFromStart } from '@/lib/utils';
 import { Settings as SettingsIcon, Rocket, Sparkles, Lock } from 'lucide-react';
 
+// Phase metadata used to render the "Browse by phase" strip.
+// Keeps the homepage linked to the 5 phase detail pages so Google
+// discovers them via crawl (even if it finds them in the sitemap first).
+const PHASE_LINKS = [
+  { slug: 'phase-1-math-foundations',            label: 'Phase 1', title: 'Math Foundations',              weeks: 'Wks 1–8' },
+  { slug: 'phase-2-deep-learning-pytorch',        label: 'Phase 2', title: 'Deep Learning & PyTorch',       weeks: 'Wks 9–16' },
+  { slug: 'phase-3-applied-llm-engineering',      label: 'Phase 3', title: 'Applied LLM Engineering',       weeks: 'Wks 17–24' },
+  { slug: 'phase-4-ml-system-design-interview',   label: 'Phase 4', title: 'ML System Design & Interview',  weeks: 'Wks 25–32' },
+  { slug: 'phase-5-specialization',               label: 'Phase 5', title: 'Specialization',                weeks: 'Wks 33–40' },
+];
+
 export default function Page() {
+  const [mounted, setMounted] = useState(false);
   const [resetOpen, setResetOpen] = useState(false);
   const { isSignedIn, isLoaded } = useUser();
-  const cloudSyncStatus = useCloudProgressSync();
   const startDate = useRoadmapStore((s) => s.startDate);
   const setSelectedWeek = useRoadmapStore((s) => s.setSelectedWeek);
   const hydrated = useRoadmapStore((s) => s.hydrated);
@@ -28,19 +41,23 @@ export default function Page() {
   const closeAuthModal = useRoadmapStore((s) => s.closeAuthModal);
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
     if (hydrated) {
       const wk = currentWeekFromStart(startDate);
       setSelectedWeek(wk);
     }
   }, [hydrated, startDate, setSelectedWeek]);
 
-  if (!hydrated || !isLoaded || (isSignedIn && (cloudSyncStatus === 'idle' || cloudSyncStatus === 'loading'))) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-zinc-950 text-zinc-400">
-        <div className="animate-pulse">Loading progress...</div>
-      </div>
-    );
-  }
+  // SEO FIX: Never return a loading spinner — Googlebot must see the full
+  // roadmap on the very first HTML response. We render SignedOutLayout by
+  // default (it contains the h1 + all 40 weeks of content) and only swap to
+  // SignedInLayout once Clerk has confirmed the session AND the store is
+  // hydrated. This eliminates the "Loading…" placeholder that was blocking
+  // all organic indexing.
+  const showSignedIn = mounted && isLoaded && !!isSignedIn;
 
   return (
     <div className="flex min-h-screen bg-zinc-950">
@@ -48,7 +65,7 @@ export default function Page() {
       <main className="flex-1 min-w-0">
         <TopHeader />
         <div className="mx-auto w-full max-w-[1600px] px-4 py-6 lg:px-8 lg:py-8">
-          {isSignedIn ? (
+          {showSignedIn ? (
             <SignedInLayout onReset={() => setResetOpen(true)} />
           ) : (
             <SignedOutLayout onSignUp={() => openAuthModal('sign-up')} />
@@ -57,6 +74,7 @@ export default function Page() {
       </main>
       <ResetModal open={resetOpen} onClose={() => setResetOpen(false)} />
       <AuthModal open={authModalOpen} onClose={closeAuthModal} initialMode={authModalMode} />
+      <Toaster />
     </div>
   );
 }
@@ -65,6 +83,7 @@ function SignedInLayout({ onReset }: { onReset: () => void }) {
   return (
     <div className="flex flex-col gap-6 lg:flex-row">
       <div className="flex-1 min-w-0 space-y-8">
+        <DashboardHero />
         <section id="dashboard" className="scroll-mt-24">
           <StatsCards />
         </section>
@@ -89,11 +108,40 @@ function SignedOutLayout({ onSignUp }: { onSignUp: () => void }) {
   return (
     <div className="space-y-8">
       <PublicHero onSignUp={onSignUp} />
+      {/* Phase navigation strip — internal links Google uses to discover phase pages */}
+      <PhasesStrip />
       <section id="roadmap" className="scroll-mt-24">
         <RoadmapSection />
       </section>
       <PublicCallout onSignUp={onSignUp} />
     </div>
+  );
+}
+
+function PhasesStrip() {
+  return (
+    <nav aria-label="Browse by phase">
+      <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-zinc-600">
+        Browse by phase
+      </p>
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+        {PHASE_LINKS.map((p) => (
+          <Link
+            key={p.slug}
+            href={`/roadmap/${p.slug}`}
+            className="group rounded-xl border border-zinc-800 bg-zinc-900/50 px-3 py-3 transition hover:border-zinc-700 hover:bg-zinc-900"
+          >
+            <span className="block text-[10px] font-semibold uppercase tracking-wider text-brand-500">
+              {p.label}
+            </span>
+            <span className="mt-0.5 block text-xs font-medium text-zinc-300 group-hover:text-zinc-100 leading-snug">
+              {p.title}
+            </span>
+            <span className="mt-1 block text-[10px] text-zinc-600">{p.weeks}</span>
+          </Link>
+        ))}
+      </div>
+    </nav>
   );
 }
 
@@ -176,7 +224,6 @@ function PublicCallout({ onSignUp }: { onSignUp: () => void }) {
 function SettingsSection({ onReset }: { onReset: () => void }) {
   const startDate = useRoadmapStore((s) => s.startDate);
   const setStartDate = useRoadmapStore((s) => s.setStartDate);
-  const cloudSyncStatus = useRoadmapStore((s) => s.cloudSyncStatus);
   return (
     <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-5">
       <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-zinc-100">
@@ -193,15 +240,6 @@ function SettingsSection({ onReset }: { onReset: () => void }) {
             className="w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-brand-500"
           />
           <span className="mt-1 block text-xs text-zinc-500">Week 1 begins on this date.</span>
-          <span className="mt-2 block text-xs text-zinc-500">
-            {cloudSyncStatus === 'synced'
-              ? 'Progress is synced to your account.'
-              : cloudSyncStatus === 'syncing'
-                ? 'Saving progress to your account...'
-                : cloudSyncStatus === 'offline'
-                  ? 'Cloud sync is unavailable. Changes remain saved in this browser.'
-                  : 'Connecting cloud sync...'}
-          </span>
         </label>
         <div className="flex items-end">
           <button
