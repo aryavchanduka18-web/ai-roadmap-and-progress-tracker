@@ -15,7 +15,7 @@ import { DashboardHero } from '@/components/DashboardHero';
 import { Toaster } from '@/components/Toaster';
 import { useRoadmapStore } from '@/lib/store';
 import { currentWeekFromStart } from '@/lib/utils';
-import { Settings as SettingsIcon, Rocket, Sparkles, Lock } from 'lucide-react';
+import { Rocket, Sparkles, Lock } from 'lucide-react';
 
 // Phase metadata used to render the "Browse by phase" strip.
 // Keeps the homepage linked to the 5 phase detail pages so Google
@@ -224,10 +224,6 @@ function PublicCallout({ onSignUp }: { onSignUp: () => void }) {
 function SettingsSection({ onReset }: { onReset: () => void }) {
   return (
     <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-5">
-      <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-zinc-100">
-        <SettingsIcon className="h-4 w-4 text-brand-500" />
-        Settings
-      </div>
       <button
         onClick={onReset}
         className="rounded-md border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-sm font-medium text-rose-300 transition hover:bg-rose-500/20"
