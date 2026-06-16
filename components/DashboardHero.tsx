@@ -17,12 +17,6 @@ import { currentWeekFromStart, todayKey } from '@/lib/utils';
 import { TOTAL_WEEKS } from '@/lib/roadmap-data';
 import { Checkbox } from './ui/Checkbox';
 
-function greeting(): string {
-  const h = new Date().getHours();
-  if (h < 12) return 'Good morning';
-  if (h < 18) return 'Good afternoon';
-  return 'Good evening';
-}
 
 // "Continue learning" hero — answers the two questions a tracker must answer
 // the moment it loads: where am I, and what do I do next. Strategic orange is
@@ -67,10 +61,10 @@ export function DashboardHero() {
       <div className="flex flex-col gap-4 border-b border-zinc-800/70 p-5 lg:flex-row lg:items-center lg:justify-between lg:p-6">
         <div>
           <h2 className="text-xl font-semibold tracking-tight text-zinc-100 lg:text-2xl">
-            {greeting()}, {firstName} <span className="align-middle">👋</span>
+            Welcome back, {firstName} <span className="align-middle">👋</span>
           </h2>
           <p className="mt-1 text-sm text-zinc-400">
-            Week <span className="font-medium text-brand-400">{currentWeek}</span> of {TOTAL_WEEKS}
+            Week <span className="font-medium text-brand-400">{milestoneWeek}</span> of {TOTAL_WEEKS}
             <span className="mx-1.5 text-zinc-700">·</span>
             {summary.completed} of {summary.total} tasks done
             <span className="mx-1.5 text-zinc-700">·</span>
