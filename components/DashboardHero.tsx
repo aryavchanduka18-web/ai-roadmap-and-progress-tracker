@@ -7,6 +7,7 @@ import { ArrowRight, Zap, Trophy, CalendarCheck, Clock } from 'lucide-react';
 import { useRoadmapStore } from '@/lib/store';
 import {
   summarizeAll,
+  summarizeWeek,
   upcomingIncomplete,
   computeStreak,
   computeLongestStreak,
@@ -40,6 +41,7 @@ export function DashboardHero() {
   const streak = useMemo(() => computeStreak(daily), [daily]);
   const longest = useMemo(() => Math.max(computeLongestStreak(daily), streak), [daily, streak]);
   const weeksDone = useMemo(() => weeksCompleted(statuses, currentWeek), [statuses, currentWeek]);
+  const weekSummary = useMemo(() => summarizeWeek(statuses, currentWeek), [statuses, currentWeek]);
   const focus = useMemo(() => upcomingIncomplete(statuses, currentWeek, 1)[0], [statuses, currentWeek]);
   const focusStatus = focus ? statuses[focus.id] ?? 'not-started' : 'not-started';
 
@@ -78,6 +80,32 @@ export function DashboardHero() {
           <StatPill icon={CalendarCheck} label="Weeks" value={`${weeksDone}`} />
         </div>
       </div>
+
+      {/* next milestone — current-week progress bar */}
+      {weekSummary.total > 0 && weekSummary.completed < weekSummary.total && (
+        <div className="flex items-center justify-between gap-4 border-b border-zinc-800/70 px-5 py-3 lg:px-6">
+          <div className="min-w-0 flex-1">
+            <div className="mb-1.5 flex items-center justify-between gap-2">
+              <span className="text-xs font-semibold uppercase tracking-widest text-zinc-500">
+                Next Milestone
+              </span>
+              <span className="text-xs font-medium text-zinc-400">
+                {weekSummary.completed}/{weekSummary.total} in Week {currentWeek}
+              </span>
+            </div>
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-800">
+              <div
+                className="h-full rounded-full bg-brand-500 transition-all duration-500"
+                style={{ width: `${weekSummary.percent}%` }}
+              />
+            </div>
+            <p className="mt-1.5 text-xs text-zinc-500">
+              {weekSummary.total - weekSummary.completed} task
+              {weekSummary.total - weekSummary.completed === 1 ? '' : 's'} until Week {currentWeek} complete
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* today's focus / continue learning */}
       <div className="p-5 lg:p-6">
