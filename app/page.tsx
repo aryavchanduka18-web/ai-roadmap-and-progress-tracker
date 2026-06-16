@@ -93,9 +93,6 @@ function SignedInLayout({ onReset }: { onReset: () => void }) {
         <section id="analytics" className="scroll-mt-24">
           <AnalyticsSection />
         </section>
-        <section id="settings" className="scroll-mt-24">
-          <SettingsSection onReset={onReset} />
-        </section>
       </div>
       <aside id="weekly" className="w-full lg:w-[340px] lg:flex-shrink-0 scroll-mt-24">
         <RightPanel onResetClick={onReset} />
@@ -221,15 +218,3 @@ function PublicCallout({ onSignUp }: { onSignUp: () => void }) {
   );
 }
 
-function SettingsSection({ onReset }: { onReset: () => void }) {
-  return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-5">
-      <button
-        onClick={onReset}
-        className="rounded-md border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-sm font-medium text-rose-300 transition hover:bg-rose-500/20"
-      >
-        Reset all progress…
-      </button>
-    </div>
-  );
-}
