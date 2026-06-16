@@ -13,7 +13,7 @@ import {
   computeLongestStreak,
   weeksCompleted,
 } from '@/lib/selectors';
-import { currentWeekFromStart } from '@/lib/utils';
+import { currentWeekFromStart, todayKey } from '@/lib/utils';
 import { TOTAL_WEEKS } from '@/lib/roadmap-data';
 import { Checkbox } from './ui/Checkbox';
 
@@ -45,6 +45,8 @@ export function DashboardHero() {
   const milestoneWeek = focus?.weekNumber ?? currentWeek;
   const weekSummary = useMemo(() => summarizeWeek(statuses, milestoneWeek), [statuses, milestoneWeek]);
   const focusStatus = focus ? statuses[focus.id] ?? 'not-started' : 'not-started';
+  const todayCount = daily[todayKey()] ?? 0;
+  const doneForToday = todayCount >= 1;
 
   const firstName = user?.firstName ?? 'there';
   const remaining = summary.total - summary.completed;
@@ -108,9 +110,18 @@ export function DashboardHero() {
         </div>
       )}
 
-      {/* today's focus / continue learning */}
+      {/* today’s focus / continue learning */}
       <div className="p-5 lg:p-6">
-        {focus ? (
+        {focus && doneForToday ? (
+          <div className="flex items-start gap-3 border-l-2 border-emerald-500 pl-4">
+            <div>
+              <div className="text-base font-medium text-zinc-100">Great work today! ✓</div>
+              <div className="mt-0.5 text-sm text-zinc-500">
+                You’ve completed your task for today. Come back tomorrow for the next one.
+              </div>
+            </div>
+          </div>
+        ) : focus ? (
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex min-w-0 items-start gap-3 border-l-2 border-brand-500 pl-4">
               <div className="pt-0.5">
@@ -134,7 +145,7 @@ export function DashboardHero() {
                   ) : null}
                   {focus.resources.length > 0 ? (
                     <span>
-                      {focus.resources.length} resource{focus.resources.length === 1 ? '' : 's'}
+                      {focus.resources.length} resource{focus.resources.length === 1 ? ‘’ : ‘s’}
                     </span>
                   ) : null}
                 </div>
