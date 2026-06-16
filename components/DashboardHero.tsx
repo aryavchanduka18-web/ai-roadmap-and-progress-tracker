@@ -41,8 +41,9 @@ export function DashboardHero() {
   const streak = useMemo(() => computeStreak(daily), [daily]);
   const longest = useMemo(() => Math.max(computeLongestStreak(daily), streak), [daily, streak]);
   const weeksDone = useMemo(() => weeksCompleted(statuses, currentWeek), [statuses, currentWeek]);
-  const weekSummary = useMemo(() => summarizeWeek(statuses, currentWeek), [statuses, currentWeek]);
-  const focus = useMemo(() => upcomingIncomplete(statuses, currentWeek, 1)[0], [statuses, currentWeek]);
+  const focus = useMemo(() => upcomingIncomplete(statuses, 1, 1)[0], [statuses]);
+  const milestoneWeek = focus?.weekNumber ?? currentWeek;
+  const weekSummary = useMemo(() => summarizeWeek(statuses, milestoneWeek), [statuses, milestoneWeek]);
   const focusStatus = focus ? statuses[focus.id] ?? 'not-started' : 'not-started';
 
   const firstName = user?.firstName ?? 'there';
@@ -90,7 +91,7 @@ export function DashboardHero() {
                 Next Milestone
               </span>
               <span className="text-xs font-medium text-zinc-400">
-                {weekSummary.completed}/{weekSummary.total} in Week {currentWeek}
+                {weekSummary.completed}/{weekSummary.total} in Week {milestoneWeek}
               </span>
             </div>
             <div className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-800">
@@ -101,7 +102,7 @@ export function DashboardHero() {
             </div>
             <p className="mt-1.5 text-xs text-zinc-500">
               {weekSummary.total - weekSummary.completed} task
-              {weekSummary.total - weekSummary.completed === 1 ? '' : 's'} until Week {currentWeek} complete
+              {weekSummary.total - weekSummary.completed === 1 ? '' : 's'} until Week {milestoneWeek} complete
             </p>
           </div>
         </div>
