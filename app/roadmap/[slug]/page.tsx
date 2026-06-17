@@ -70,7 +70,7 @@ export async function generateMetadata({
   return {
     title,
     description,
-    alternates: { canonical: `/roadmap/${params.slug}` },
+    alternates: { canonical: `${SITE_URL}/roadmap/${params.slug}` },
     openGraph: {
       title,
       description,
