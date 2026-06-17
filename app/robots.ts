@@ -10,10 +10,12 @@ export default function robots(): MetadataRoute.Robots {
         userAgent: '*',
         allow: '/',
       },
-      // Block AI training scrapers — they consume bandwidth without contributing
-      // to organic search traffic. Add/remove bots from this list as needed.
+      // Block mass-scraping bots with no search/citation benefit.
+      // GPTBot (ChatGPT), anthropic-ai (Claude), OAI-SearchBot are intentionally
+      // allowed so the site appears in AI-powered search — critical for a site
+      // targeting AI engineers who use these tools daily.
       {
-        userAgent: ['GPTBot', 'CCBot', 'anthropic-ai', 'Claude-Web', 'Bytespider'],
+        userAgent: ['CCBot', 'Bytespider'],
         disallow: '/',
       },
     ],

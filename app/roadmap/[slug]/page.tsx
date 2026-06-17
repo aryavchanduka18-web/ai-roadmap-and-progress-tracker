@@ -19,26 +19,31 @@ const PHASES = [
     slug: 'phase-1-math-foundations',
     phaseId: 'phase-1',
     keyTerms: 'linear algebra, calculus, probability, Python ML toolchain, classical ML',
+    h1Override: 'Math Foundations & Python ML Toolchain for AI Engineers',
   },
   {
     slug: 'phase-2-deep-learning-pytorch',
     phaseId: 'phase-2',
     keyTerms: 'neural networks, PyTorch, GPT from scratch, CNNs, NLP, transformers',
+    h1Override: 'Deep Learning & PyTorch — Neural Networks from Scratch',
   },
   {
     slug: 'phase-3-applied-llm-engineering',
     phaseId: 'phase-3',
     keyTerms: 'prompt engineering, RAG, LoRA fine-tuning, AI agents, LangChain, production LLMs',
+    h1Override: 'Applied LLM Engineering — RAG, Fine-Tuning & AI Agents',
   },
   {
     slug: 'phase-4-ml-system-design-interview',
     phaseId: 'phase-4',
     keyTerms: 'ML system design, DSA for ML engineers, coding interviews, ML breadth',
+    h1Override: 'ML System Design & Interview Prep for AI Engineers',
   },
   {
     slug: 'phase-5-specialization',
     phaseId: 'phase-5',
     keyTerms: 'AI specialization, computer vision, NLP, internship preparation, MS applications',
+    h1Override: 'AI Specialization — Computer Vision, NLP & Career Prep',
   },
 ] as const;
 
@@ -82,6 +87,7 @@ export async function generateMetadata({
       card: 'summary_large_image',
       title,
       description,
+      images: [`${SITE_URL}/opengraph-image`],
     },
   };
 }
@@ -173,7 +179,7 @@ export default function PhasePage({ params }: { params: { slug: string } }) {
           </div>
 
           <h1 className="text-3xl font-bold tracking-tight text-zinc-100 lg:text-4xl">
-            {phase.title}
+            {entry.h1Override}
           </h1>
 
           <p className="mt-4 max-w-2xl text-base leading-relaxed text-zinc-400">
@@ -288,6 +294,14 @@ export default function PhasePage({ params }: { params: { slug: string } }) {
         </section>
 
         {/* ── Prev / Next navigation ─────────────────────────────────── */}
+        <p className="mb-8 text-center text-xs text-zinc-600">
+          Built by{' '}
+          <Link href="/about" className="text-zinc-500 hover:text-zinc-400 transition-colors underline underline-offset-2">
+            Aryav Chanduka
+          </Link>
+          {' '}· B.Tech CSE AI/ML, Manipal University Jaipur
+        </p>
+
         <nav
           aria-label="Phase navigation"
           className="flex items-start justify-between border-t border-zinc-800 pt-8"

@@ -1,0 +1,38 @@
+# AI Engineer Roadmap Tracker
+
+> A free, opinionated 10-month curriculum for becoming a job-ready AI Engineer — built by Aryav Chanduka, B.Tech CSE AI/ML student at Manipal University Jaipur.
+
+## What this site is
+
+A structured 40-week learning roadmap covering every skill an AI Engineer needs: math foundations, deep learning with PyTorch, applied LLM engineering (RAG, fine-tuning, agents), ML system design, coding interviews, and AI specialization (computer vision, NLP). Daily tasks with hand-picked resources for each topic.
+
+The tracker lets you sign in (free) to mark tasks complete, build a learning streak, and view analytics. The full roadmap is publicly visible without sign-in.
+
+## The curriculum
+
+- **Phase 1 — Math Foundations (Weeks 1–8)**: Linear algebra, calculus, probability, Python ML toolchain (NumPy, Pandas, Matplotlib), classical ML (scikit-learn, regression, decision trees, SVMs, clustering).
+- **Phase 2 — Deep Learning & PyTorch (Weeks 9–16)**: Neural networks from scratch, CNNs, NLP, transformers, building GPT from scratch (Karpathy's nanoGPT), fast.ai.
+- **Phase 3 — Applied LLM Engineering (Weeks 17–24)**: Prompt engineering, RAG pipelines, LoRA fine-tuning, AI agents, LangChain, production LLM serving (vLLM, Triton).
+- **Phase 4 — ML System Design & Interview Prep (Weeks 25–32)**: ML system design (recommendation, search, fraud detection), DSA for ML engineers, coding interview patterns, Grokking series.
+- **Phase 5 — Specialization (Weeks 33–40)**: Advanced computer vision, advanced NLP, internship and MS application prep, capstone portfolio projects.
+
+## Resources featured
+
+Courses: Stanford CS229, CS224N, fast.ai, Andrew Ng ML Specialization (free audit), Deep Learning Specialization, Karpathy's Zero to Hero series.
+Books: Deep Learning (Goodfellow), DDIA, Designing ML Systems (Huyen).
+Papers: Attention Is All You Need, GPT-3, LLaMA, LoRA, RAG (Lewis et al.).
+
+## Author
+
+Aryav Chanduka — B.Tech CSE AI/ML, Manipal University Jaipur (Year 3).
+Contact: aryavchanduka18@gmail.com
+
+## Pages
+
+- Homepage + full roadmap: https://ai-roadmap--tracker.vercel.app/
+- About page: https://ai-roadmap--tracker.vercel.app/about
+- Phase 1 — Math Foundations: https://ai-roadmap--tracker.vercel.app/roadmap/phase-1-math-foundations
+- Phase 2 — Deep Learning & PyTorch: https://ai-roadmap--tracker.vercel.app/roadmap/phase-2-deep-learning-pytorch
+- Phase 3 — Applied LLM Engineering: https://ai-roadmap--tracker.vercel.app/roadmap/phase-3-applied-llm-engineering
+- Phase 4 — ML System Design & Interview: https://ai-roadmap--tracker.vercel.app/roadmap/phase-4-ml-system-design-interview
+- Phase 5 — Specialization: https://ai-roadmap--tracker.vercel.app/roadmap/phase-5-specialization
