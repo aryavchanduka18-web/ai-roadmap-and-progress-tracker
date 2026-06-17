@@ -47,6 +47,15 @@ const nextStatus = (s: Status): Status =>
   s === 'not-started' ? 'in-progress' : s === 'in-progress' ? 'completed' : 'not-started';
 
 function applyCompletion(state: RoadmapState, prev: Status, next: Status): Partial<RoadmapState> {
+  if (prev === 'completed' && next !== 'completed') {
+    const today = todayKey();
+    return {
+      dailyCompletions: {
+        ...state.dailyCompletions,
+        [today]: Math.max(0, (state.dailyCompletions[today] ?? 0) - 1),
+      },
+    };
+  }
   if (next !== 'completed' || prev === 'completed') return {};
   const today = todayKey();
   const dailyCompletions = { ...state.dailyCompletions, [today]: (state.dailyCompletions[today] ?? 0) + 1 };
