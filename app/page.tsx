@@ -192,7 +192,7 @@ function PublicHero({ onSignUp }: { onSignUp: () => void }) {
 
 function PublicCallout({ onSignUp }: { onSignUp: () => void }) {
   return (
-    <section id="weekly" className="scroll-mt-24">
+    <section id="weekly" className="scroll-mt-24 space-y-4">
       <div className="flex flex-col items-start gap-4 rounded-xl border border-brand-500/20 bg-brand-500/5 p-5 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex items-start gap-3">
           <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-brand-500/20 text-brand-400">
@@ -214,6 +214,13 @@ function PublicCallout({ onSignUp }: { onSignUp: () => void }) {
           Sign up free
         </button>
       </div>
+      <p className="text-center text-xs text-zinc-600">
+        Built by{' '}
+        <Link href="/about" className="text-zinc-500 hover:text-zinc-400 transition-colors underline underline-offset-2">
+          Aryav Chanduka
+        </Link>
+        {' '}· B.Tech CSE AI/ML, Manipal University Jaipur
+      </p>
     </section>
   );
 }

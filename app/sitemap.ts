@@ -11,17 +11,25 @@ const PHASE_SLUGS = [
   'phase-5-specialization',
 ];
 
+const PHASE_UPDATED = '2026-06-17';
+
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
     {
       url: `${SITE_URL}/`,
-      lastModified: '2026-06-09',
+      lastModified: new Date().toISOString(),
       changeFrequency: 'weekly',
       priority: 1.0,
     },
+    {
+      url: `${SITE_URL}/about`,
+      lastModified: PHASE_UPDATED,
+      changeFrequency: 'yearly',
+      priority: 0.5,
+    },
     ...PHASE_SLUGS.map((slug) => ({
       url: `${SITE_URL}/roadmap/${slug}`,
-      lastModified: '2026-06-09',
+      lastModified: PHASE_UPDATED,
       changeFrequency: 'monthly' as const,
       priority: 0.8,
     })),

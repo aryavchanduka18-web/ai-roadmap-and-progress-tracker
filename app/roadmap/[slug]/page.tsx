@@ -246,7 +246,7 @@ export default function PhasePage({ params }: { params: { slug: string } }) {
               // Show first 4 daily tasks as a preview (strip "Mon — " prefix)
               const preview = topic.subtopics
                 .slice(0, 4)
-                .map((s) => s.title.replace(/^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\s*[—–-]+\s*/, ''))
+                .map((s) => s.title.replace(/^(Mon|Tue|Wed|Thu|Fri|Sat|Sun|Day\s*\d+)\s*[—–-]+\s*/, ''))
                 .join(' · ');
 
               return (
@@ -280,7 +280,7 @@ export default function PhasePage({ params }: { params: { slug: string } }) {
               t.subtopics.map((s) => (
                 <li key={s.id} className="flex items-start gap-2">
                   <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-brand-500/60" />
-                  {s.title.replace(/^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\s*[—–-]+\s*/, '')}
+                  {s.title.replace(/^(Mon|Tue|Wed|Thu|Fri|Sat|Sun|Day\s*\d+)\s*[—–-]+\s*/, '')}
                 </li>
               ))
             )}
