@@ -1,18 +1,35 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useUser } from '@clerk/nextjs';
 import { Sidebar } from '@/components/Sidebar';
 import { TopHeader } from '@/components/TopHeader';
-import { StatsCards } from '@/components/StatsCards';
 import { RoadmapSection } from '@/components/RoadmapSection';
-import { AnalyticsSection } from '@/components/AnalyticsSection';
-import { RightPanel } from '@/components/RightPanel';
 import { ResetModal } from '@/components/ResetModal';
 import { AuthModal } from '@/components/AuthModal';
-import { DashboardHero } from '@/components/DashboardHero';
 import { Toaster } from '@/components/Toaster';
+
+// Signed-in-only components — never render on SSR or for anonymous users.
+// Dynamic imports keep recharts + signed-in-specific framer-motion out of the
+// initial bundle, which is the primary cause of high TBT on PageSpeed.
+const DashboardHero = dynamic(
+  () => import('@/components/DashboardHero').then((m) => ({ default: m.DashboardHero })),
+  { ssr: false }
+);
+const StatsCards = dynamic(
+  () => import('@/components/StatsCards').then((m) => ({ default: m.StatsCards })),
+  { ssr: false }
+);
+const AnalyticsSection = dynamic(
+  () => import('@/components/AnalyticsSection').then((m) => ({ default: m.AnalyticsSection })),
+  { ssr: false }
+);
+const RightPanel = dynamic(
+  () => import('@/components/RightPanel').then((m) => ({ default: m.RightPanel })),
+  { ssr: false }
+);
 import { useRoadmapStore } from '@/lib/store';
 import { currentWeekFromStart } from '@/lib/utils';
 import { Rocket, Sparkles, Lock } from 'lucide-react';
