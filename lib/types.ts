@@ -42,7 +42,7 @@ export interface PersistedState {
   streak: number;
   longestStreak: number;
   sidebarCollapsed: boolean;
-  dailyCompletions: Record<string, number>; // YYYY-MM-DD -> count
+  dailyCompletions: Record<string, string[]>; // YYYY-MM-DD -> completed subtopic IDs
   startDate: string; // YYYY-MM-DD
 }
 

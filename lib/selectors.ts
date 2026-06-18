@@ -93,10 +93,10 @@ export interface DailyDatum {
 }
 
 export function dailyCompletionsSeries(
-  daily: Record<string, number>,
+  daily: Record<string, string[]>,
   dateKeys: string[]
 ): DailyDatum[] {
-  return dateKeys.map((d) => ({ date: d, completions: daily[d] ?? 0 }));
+  return dateKeys.map((d) => ({ date: d, completions: (daily[d] ?? []).length }));
 }
 
 export interface PhaseBarDatum {
@@ -115,25 +115,23 @@ export function phasePercents(map: StatusMap): PhaseBarDatum[] {
 // The old store kept a frozen `streak` field that only updated on completion,
 // so a broken streak still displayed its last value. These derive the streak
 // from the actual completion history every render.
-export function computeStreak(daily: Record<string, number>, today: string = todayKey()): number {
+export function computeStreak(daily: Record<string, string[]>, today: string = todayKey()): number {
   const cursor = parseDateKey(today);
-  // If today has no completions yet, the streak is still "alive" when yesterday
-  // had one (grace for the current day). If neither, it's broken → 0.
-  if ((daily[todayKey(cursor)] ?? 0) === 0) {
+  if ((daily[todayKey(cursor)] ?? []).length === 0) {
     cursor.setDate(cursor.getDate() - 1);
-    if ((daily[todayKey(cursor)] ?? 0) === 0) return 0;
+    if ((daily[todayKey(cursor)] ?? []).length === 0) return 0;
   }
   let streak = 0;
-  while ((daily[todayKey(cursor)] ?? 0) > 0) {
+  while ((daily[todayKey(cursor)] ?? []).length > 0) {
     streak++;
     cursor.setDate(cursor.getDate() - 1);
   }
   return streak;
 }
 
-export function computeLongestStreak(daily: Record<string, number>): number {
+export function computeLongestStreak(daily: Record<string, string[]>): number {
   const active = Object.keys(daily)
-    .filter((d) => (daily[d] ?? 0) > 0)
+    .filter((d) => (daily[d] ?? []).length > 0)
     .sort();
   let longest = 0;
   let run = 0;

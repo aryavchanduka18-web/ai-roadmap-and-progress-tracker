@@ -39,8 +39,8 @@ export function DashboardHero() {
   const milestoneWeek = focus?.weekNumber ?? currentWeek;
   const weekSummary = useMemo(() => summarizeWeek(statuses, milestoneWeek), [statuses, milestoneWeek]);
   const focusStatus = focus ? statuses[focus.id] ?? 'not-started' : 'not-started';
-  const todayCount = daily[todayKey()] ?? 0;
-  const doneForToday = todayCount >= 1;
+  const todayIds = daily[todayKey()] ?? [];
+  const doneForToday = todayIds.some((id) => statuses[id] === 'completed');
 
   const firstName = user?.firstName ?? 'there';
   const remaining = summary.total - summary.completed;

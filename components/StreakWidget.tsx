@@ -29,7 +29,7 @@ export function StreakWidget({ collapsed }: { collapsed: boolean }) {
     );
   }
 
-  const maxCount = Math.max(1, ...last7.map((d) => daily[d] ?? 0));
+  const maxCount = Math.max(1, ...last7.map((d) => (daily[d] ?? []).length));
 
   return (
     <div className="space-y-3">
@@ -45,7 +45,7 @@ export function StreakWidget({ collapsed }: { collapsed: boolean }) {
         </div>
         <div className="mt-4 flex h-8 items-end gap-1">
           {last7.map((d) => {
-            const v = daily[d] ?? 0;
+            const v = (daily[d] ?? []).length;
             const h = `${(v / maxCount) * 100}%`;
             return (
               <div
@@ -57,7 +57,7 @@ export function StreakWidget({ collapsed }: { collapsed: boolean }) {
             );
           })}
         </div>
-        <div className="mt-1 text-[9px] uppercase tracking-wider opacity-70">Last 7 days · today {daily[today] ?? 0}</div>
+        <div className="mt-1 text-[9px] uppercase tracking-wider opacity-70">Last 7 days · today {(daily[today] ?? []).length}</div>
       </motion.div>
       <div className="rounded-lg border border-zinc-800 bg-zinc-900/60 p-3">
         <div className="text-[10px] uppercase tracking-wider text-zinc-500">Daily fuel</div>

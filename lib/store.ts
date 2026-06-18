@@ -8,7 +8,7 @@ import { todayKey } from './utils';
 import { toast } from './toast-store';
 import { subtopicById } from './selectors';
 
-const SCHEMA_VERSION = 1;
+const SCHEMA_VERSION = 2;
 const STORAGE_KEY = 'ai-roadmap-tracker-v1';
 
 interface RoadmapState {
@@ -18,7 +18,7 @@ interface RoadmapState {
   streak: number;
   longestStreak: number;
   sidebarCollapsed: boolean;
-  dailyCompletions: Record<string, number>;
+  dailyCompletions: Record<string, string[]>;
   startDate: string;
   searchQuery: string;
   statusFilter: StatusFilter;
@@ -46,19 +46,23 @@ interface RoadmapState {
 const nextStatus = (s: Status): Status =>
   s === 'not-started' ? 'in-progress' : s === 'in-progress' ? 'completed' : 'not-started';
 
-function applyCompletion(state: RoadmapState, prev: Status, next: Status): Partial<RoadmapState> {
+function applyCompletion(state: RoadmapState, id: string, prev: Status, next: Status): Partial<RoadmapState> {
+  const today = todayKey();
+  const existing = state.dailyCompletions[today] ?? [];
+
   if (prev === 'completed' && next !== 'completed') {
-    const today = todayKey();
     return {
       dailyCompletions: {
         ...state.dailyCompletions,
-        [today]: Math.max(0, (state.dailyCompletions[today] ?? 0) - 1),
+        [today]: existing.filter((x) => x !== id),
       },
     };
   }
   if (next !== 'completed' || prev === 'completed') return {};
-  const today = todayKey();
-  const dailyCompletions = { ...state.dailyCompletions, [today]: (state.dailyCompletions[today] ?? 0) + 1 };
+
+  const dailyCompletions = existing.includes(id)
+    ? state.dailyCompletions
+    : { ...state.dailyCompletions, [today]: [...existing, id] };
 
   let streak = state.streak;
   let longestStreak = state.longestStreak;
@@ -109,7 +113,7 @@ export const useRoadmapStore = create<RoadmapState>()(
         const next = nextStatus(prev);
         set((state) => ({
           statuses: { ...state.statuses, [id]: next },
-          ...applyCompletion(state, prev, next),
+          ...applyCompletion(state, id, prev, next),
         }));
         if (next === 'completed' && prev !== 'completed') {
           toast(subtopicById(id)?.title ?? 'Task completed');
@@ -119,7 +123,7 @@ export const useRoadmapStore = create<RoadmapState>()(
         const prev: Status = get().statuses[id] ?? 'not-started';
         set((state) => ({
           statuses: { ...state.statuses, [id]: status },
-          ...applyCompletion(state, prev, status),
+          ...applyCompletion(state, id, prev, status),
         }));
         if (status === 'completed' && prev !== 'completed') {
           toast(subtopicById(id)?.title ?? 'Task completed');
@@ -134,7 +138,7 @@ export const useRoadmapStore = create<RoadmapState>()(
             const prev: Status = next[id] ?? 'not-started';
             next[id] = status;
             if (status === 'completed' && prev !== 'completed') {
-              extra = applyCompletion({ ...state, ...extra, statuses: next } as RoadmapState, prev, status);
+              extra = applyCompletion({ ...state, ...extra, statuses: next } as RoadmapState, id, prev, status);
             }
           }
           return { statuses: next, ...extra };
@@ -177,6 +181,14 @@ export const useRoadmapStore = create<RoadmapState>()(
         return window.localStorage;
       }),
       version: SCHEMA_VERSION,
+      migrate: (persisted, version) => {
+        const p = (persisted ?? {}) as Record<string, unknown>;
+        if (version < 2) {
+          // v1 dailyCompletions was Record<string, number> — can't recover IDs, reset it
+          p.dailyCompletions = {};
+        }
+        return p;
+      },
       partialize: (s) => ({
         schemaVersion: s.schemaVersion,
         statuses: s.statuses,
