@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import { Search, SearchX } from 'lucide-react';
 import { useRoadmapStore } from '@/lib/store';
-import { roadmap } from '@/lib/roadmap-data';
+import { filterRoadmap, tokenize } from '@/lib/search';
 import { PhaseCard } from './PhaseCard';
 
 export function RoadmapSection() {
@@ -13,30 +13,16 @@ export function RoadmapSection() {
   const viewMode = useRoadmapStore((s) => s.viewMode);
   const selectedWeek = useRoadmapStore((s) => s.selectedWeek);
 
-  const visiblePhases = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return roadmap.filter((phase) => {
-      const phaseTopics = phase.topics.filter((t) => {
-        // Week view: only the topic for selected week
-        if (viewMode === 'week' && !t.subtopics.some((s) => s.weekNumber === selectedWeek)) return false;
-        const visibleSubs = t.subtopics.filter((sub) => {
-          if (q && !sub.title.toLowerCase().includes(q) && !t.title.toLowerCase().includes(q)) return false;
-          if (filter !== 'all') {
-            const s = statuses[sub.id] ?? 'not-started';
-            if (s !== filter) return false;
-          }
-          return true;
-        });
-        return visibleSubs.length > 0;
-      });
-      return phaseTopics.length > 0;
-    });
-  }, [search, filter, statuses, viewMode, selectedWeek]);
+  const tokens = useMemo(() => tokenize(search), [search]);
+  const result = useMemo(
+    () => filterRoadmap(search, filter, statuses, viewMode, selectedWeek),
+    [search, filter, statuses, viewMode, selectedWeek]
+  );
 
-  if (visiblePhases.length === 0) {
+  if (result.phases.length === 0) {
     return (
       <div className="space-y-4">
-        <SectionHeading title="Roadmap Topics" />
+        <SectionHeading title="Roadmap Topics" count={0} search={search} />
         <EmptyState
           icon={search ? SearchX : Search}
           title={search ? 'No topics match your search' : 'No subtopics match your filter'}
@@ -48,20 +34,31 @@ export function RoadmapSection() {
 
   return (
     <div className="space-y-4">
-      <SectionHeading title="Roadmap Topics" />
+      <SectionHeading title="Roadmap Topics" count={result.subtopicCount} search={search} />
       <div className="space-y-3">
-        {visiblePhases.map((p) => (
-          <PhaseCard key={p.id} phase={p} defaultExpanded={p.number === 1} search={search} filter={filter} />
+        {result.phases.map((fp) => (
+          <PhaseCard
+            key={fp.phase.id}
+            filtered={fp}
+            tokens={tokens}
+            defaultExpanded={fp.phase.number === 1}
+          />
         ))}
       </div>
     </div>
   );
 }
 
-function SectionHeading({ title }: { title: string }) {
+function SectionHeading({ title, count, search }: { title: string; count: number; search: string }) {
   return (
-    <div className="flex items-baseline justify-between">
+    <div className="flex items-baseline justify-between gap-3">
       <h2 className="text-lg font-semibold tracking-tight text-zinc-100">{title}</h2>
+      {search.trim() && (
+        <span className="text-xs text-zinc-400">
+          {count} result{count === 1 ? '' : 's'} for{' '}
+          <span className="text-zinc-200">“{search.trim()}”</span>
+        </span>
+      )}
     </div>
   );
 }

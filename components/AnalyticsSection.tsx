@@ -27,8 +27,8 @@ export function AnalyticsSection() {
   const lineData = useMemo(() => dailyCompletionsSeries(daily, dates), [daily, dates]);
   const barData = useMemo(() => phasePercents(statuses), [statuses]);
 
-  const totalCompletions = Object.values(daily).reduce((a, b) => a + b, 0);
-  const activeDays = Object.values(daily).filter((v) => v > 0).length;
+  const totalCompletions = Object.values(daily).reduce((a, b) => a + b.length, 0);
+  const activeDays = Object.values(daily).filter((v) => v.length > 0).length;
   const avgPerDay = activeDays === 0 ? 0 : Math.round((totalCompletions / activeDays) * 10) / 10;
   const weeksOnTrack = Math.max(0, Math.floor(longestStreak / 7));
   const hasAnyData = totalCompletions > 0;

@@ -1,41 +1,28 @@
 'use client';
 
-import { useMemo, useCallback } from 'react';
+import { useCallback } from 'react';
 import { CheckCheck, CircleSlash } from 'lucide-react';
 import { useUser } from '@clerk/nextjs';
-import type { Topic, StatusFilter } from '@/lib/types';
 import { useRoadmapStore } from '@/lib/store';
 import { summarizeTopic } from '@/lib/selectors';
+import type { FilteredTopic } from '@/lib/search';
 import { SubtopicRow } from './SubtopicRow';
 import { ProgressBar } from './ui/ProgressBar';
+import { Highlight } from './ui/Highlight';
 
 interface Props {
-  topic: Topic;
+  filtered: FilteredTopic;
+  tokens: string[];
   topicIndex: number; // 1-based
-  search: string;
-  filter: StatusFilter;
 }
 
-export function TopicGroup({ topic, topicIndex, search, filter }: Props) {
+export function TopicGroup({ filtered, tokens, topicIndex }: Props) {
   const { isSignedIn } = useUser();
   const statuses = useRoadmapStore((s) => s.statuses);
   const setMany = useRoadmapStore((s) => s.setMany);
 
-  const filteredSubs = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return topic.subtopics.filter((sub) => {
-      if (q) {
-        const matchSub = sub.title.toLowerCase().includes(q);
-        const matchTopic = topic.title.toLowerCase().includes(q);
-        if (!matchSub && !matchTopic) return false;
-      }
-      if (filter !== 'all') {
-        const s = statuses[sub.id] ?? 'not-started';
-        if (s !== filter) return false;
-      }
-      return true;
-    });
-  }, [topic, search, filter, statuses]);
+  const topic = filtered.topic;
+  const filteredSubs = filtered.subtopics;
 
   const summary = summarizeTopic(statuses, topic);
 
@@ -52,7 +39,9 @@ export function TopicGroup({ topic, topicIndex, search, filter }: Props) {
     <div className="rounded-lg border border-zinc-800/70 bg-zinc-950/40">
       <div className="flex flex-wrap items-center gap-3 border-b border-zinc-800/70 px-3 py-2.5">
         <div className="min-w-0 flex-1">
-          <div className="text-sm font-medium text-zinc-100">{topic.title}</div>
+          <div className="text-sm font-medium text-zinc-100">
+            <Highlight text={topic.title} tokens={tokens} />
+          </div>
           <div className="mt-1 flex items-center gap-2 text-[11px] text-zinc-500">
             <span>{summary.completed} / {summary.total}</span>
             <span className="text-zinc-700">·</span>
@@ -82,10 +71,11 @@ export function TopicGroup({ topic, topicIndex, search, filter }: Props) {
         )}
       </div>
       <div className="space-y-0.5 p-2">
-        {filteredSubs.map((sub, i) => (
+        {filteredSubs.map((sub) => (
           <SubtopicRow
             key={sub.id}
             subtopic={sub}
+            tokens={tokens}
             index={`${topicIndex}.${topic.subtopics.findIndex((s) => s.id === sub.id) + 1}`}
           />
         ))}

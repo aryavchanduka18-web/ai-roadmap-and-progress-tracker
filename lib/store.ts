@@ -27,8 +27,10 @@ interface RoadmapState {
   hydrated: boolean;
   authModalOpen: boolean;
   authModalMode: 'sign-in' | 'sign-up';
+  revealId: string | null;
 
   cycleStatus: (subtopicId: string) => void;
+  reveal: (id: string | null) => void;
   setStatus: (subtopicId: string, status: Status) => void;
   setMany: (ids: string[], status: Status) => void;
   setSidebarCollapsed: (v: boolean) => void;
@@ -104,6 +106,9 @@ export const useRoadmapStore = create<RoadmapState>()(
       hydrated: false,
       authModalOpen: false,
       authModalMode: 'sign-in',
+      revealId: null,
+
+      reveal: (id) => set({ revealId: id }),
 
       openAuthModal: (mode = 'sign-in') => set({ authModalOpen: true, authModalMode: mode }),
       closeAuthModal: () => set({ authModalOpen: false }),

@@ -1,18 +1,21 @@
 'use client';
 
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useUser } from '@clerk/nextjs';
 import { Youtube, FileText, BookOpen, BookMarked, GraduationCap, ExternalLink } from 'lucide-react';
 import type { Resource, Subtopic } from '@/lib/types';
 import { useRoadmapStore } from '@/lib/store';
+import { cn } from '@/lib/utils';
 import { Checkbox } from './ui/Checkbox';
 import { HoursPill, PriorityBadge, StatusBadge } from './ui/Badge';
 import { Tooltip } from './ui/Tooltip';
+import { Highlight } from './ui/Highlight';
 
 interface Props {
   subtopic: Subtopic;
   index: string;
+  tokens?: string[];
 }
 
 const RESOURCE_ICON: Record<Resource['type'], React.ComponentType<{ className?: string }>> = {
@@ -31,11 +34,25 @@ const RESOURCE_TINT: Record<Resource['type'], string> = {
   course: 'text-emerald-400 hover:text-emerald-300',
 };
 
-function SubtopicRowBase({ subtopic, index }: Props) {
+function SubtopicRowBase({ subtopic, index, tokens = [] }: Props) {
   const { isSignedIn } = useUser();
   const status = useRoadmapStore((s) => s.statuses[subtopic.id] ?? 'not-started');
   const cycle = useRoadmapStore((s) => s.cycleStatus);
   const openAuthModal = useRoadmapStore((s) => s.openAuthModal);
+  const revealId = useRoadmapStore((s) => s.revealId);
+  const reveal = useRoadmapStore((s) => s.reveal);
+  const ref = useRef<HTMLDivElement>(null);
+  const revealed = revealId === subtopic.id;
+
+  // When a dropdown result targets this row, scroll it into view and pulse a
+  // highlight ring, then clear the reveal flag so it can fire again later.
+  useEffect(() => {
+    if (!revealed) return;
+    ref.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const t = setTimeout(() => reveal(null), 2200);
+    return () => clearTimeout(t);
+  }, [revealed, reveal]);
+
   const onCycle = useCallback(() => {
     if (isSignedIn) {
       cycle(subtopic.id);
@@ -46,8 +63,13 @@ function SubtopicRowBase({ subtopic, index }: Props) {
 
   return (
     <motion.div
+      ref={ref}
+      id={`sub-${subtopic.id}`}
       layout
-      className="group flex items-start gap-3 rounded-lg border border-transparent px-2 py-2 transition hover:border-zinc-800 hover:bg-zinc-900/40"
+      className={cn(
+        'group flex items-start gap-3 rounded-lg border border-transparent px-2 py-2 transition hover:border-zinc-800 hover:bg-zinc-900/40',
+        revealed && 'border-brand-500/70 bg-brand-500/10 ring-2 ring-brand-500/40'
+      )}
     >
       <div className="pt-0.5">
         <Checkbox status={status} onCycle={onCycle} ariaLabel={`Toggle ${subtopic.title}`} />
@@ -55,7 +77,9 @@ function SubtopicRowBase({ subtopic, index }: Props) {
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
           <span className="text-[11px] font-medium text-zinc-500">{index}</span>
-          <span className="text-sm text-zinc-100">{subtopic.title}</span>
+          <span className="text-sm text-zinc-100">
+            <Highlight text={subtopic.title} tokens={tokens} />
+          </span>
         </div>
         <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
           <HoursPill hours={subtopic.hours} />
