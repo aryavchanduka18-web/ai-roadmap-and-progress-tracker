@@ -7,7 +7,6 @@ import {
   Map,
   BarChart3,
   CalendarDays,
-  Settings,
   ChevronLeft,
   Rocket,
   Menu,
@@ -29,7 +28,6 @@ const NAV: NavItem[] = [
   { href: '#roadmap', label: 'Roadmap', icon: Map },
   { href: '#weekly', label: 'Weekly Progress', icon: CalendarDays },
   { href: '#analytics', label: 'Analytics', icon: BarChart3 },
-  { href: '#settings', label: 'Settings', icon: Settings },
 ];
 
 interface SidebarProps {
