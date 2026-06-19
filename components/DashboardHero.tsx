@@ -61,7 +61,7 @@ export function DashboardHero() {
       <div className="flex flex-col gap-4 border-b border-zinc-800/70 p-5 lg:flex-row lg:items-center lg:justify-between lg:p-6">
         <div>
           <h2 className="text-xl font-semibold tracking-tight text-zinc-100 lg:text-2xl">
-            Welcome back, {firstName} <span className="align-middle">👋</span>
+            Welcome back, {firstName}
           </h2>
           <p className="mt-1 text-sm text-zinc-400">
             Week <span className="font-medium text-brand-400">{milestoneWeek}</span> of {TOTAL_WEEKS}
@@ -109,7 +109,7 @@ export function DashboardHero() {
         {focus && doneForToday ? (
           <div className="flex items-start gap-3 border-l-2 border-emerald-500 pl-4">
             <div>
-              <div className="text-base font-medium text-zinc-100">Great work today! ✓</div>
+              <div className="text-base font-medium text-zinc-100">Great work today</div>
               <div className="mt-0.5 text-sm text-zinc-500">
                 You’ve completed your task for today. Come back tomorrow for the next one.
               </div>
@@ -156,7 +156,7 @@ export function DashboardHero() {
         ) : (
           <div className="flex items-start gap-3 border-l-2 border-emerald-500 pl-4">
             <div>
-              <div className="text-base font-medium text-zinc-100">You’re all caught up 🎉</div>
+              <div className="text-base font-medium text-zinc-100">You’re all caught up</div>
               <div className="mt-0.5 text-sm text-zinc-500">
                 Nothing pending from week {currentWeek} onward. Pick any week below to get ahead.
               </div>
